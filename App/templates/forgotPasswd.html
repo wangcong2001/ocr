@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+<head>
+    <meta charset="UTF-8">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/forgotPasswd.css') }}">
+    <script src="{{ url_for('static', filename='js/forgotPasswd.js') }}"></script>
+    <link rel="icon" href="{{ url_for('static', filename='img/favicon.ico') }}">
+
+
+    <title>忘记密码</title>
+</head>
+<body>
+<div class="passwordContainer">
+    <div class="container">
+        <h2>忘记密码</h2>
+        <form id="forgotPasswordForm">
+            <div class="formGroup">
+                <label for="username">用户名</label>
+                <input type="text" id="username" name="username" required>
+            </div>
+            <div class="formGroup">
+                <label for="email">邮箱</label>
+                <input type="email" id="email" name="email" required>
+            </div>
+            <div class="formGroup">
+                <label for="verificationCode">验证码</label>
+                <input type="text" id="verificationCode" name="verificationCode" required>
+                <button type="button" id="sendCodeBtn">发送验证码</button>
+            </div>
+            <div class="formGroup">
+                <label for="newPassword">新密码</label>
+                <input type="password" id="newPassword" name="newPassword" required>
+            </div>
+            <div class="formGroup">
+                <label for="confirmNewPassword">确认新密码</label>
+                <input type="password" id="confirmNewPassword" name="confirmNewPassword" required>
+            </div>
+            <button type="submit">重置密码</button>
+            <p id="errorMsg" class="error-msg"></p>
+        </form>
+    </div>
+
+    <div class="returnHome">
+        <a href="/">返回首页</a>
+    </div>
+</div>
+
+
+</body>
+</html>

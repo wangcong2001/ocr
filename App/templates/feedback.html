@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Feedback</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/feedback.css') }}">
+    <script src="{{ url_for('static', filename='js/feedback.js') }}"></script>
+    <link rel="icon" href="{{ url_for('static', filename='img/favicon.ico') }}">
+</head>
+<body>
+
+<div class="container">
+    <h2>意见反馈</h2>
+    <form id="feedbackForm">
+        <div class="inputGroup">
+            <label for="feedbackText">反馈内容</label>
+            <textarea id="feedbackText" name="feedback" rows="5" cols="50" required></textarea>
+        </div>
+        <button type="submit">提交</button>
+        <p id="errorMsg" class="errorMsg-msg" style="color: red; text-align: center;"></p>
+    </form>
+    <span class="login"><a href="/">返回首页</a></span>
+</div>
+
+</body>
+<style>
+    .errorMsg {
+    color: red;
+    text-align: center;
+}
+
+</style>
+<script>
+
+
+</script>
+</html>

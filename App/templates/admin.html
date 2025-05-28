@@ -1,0 +1,840 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <title>管理员中心</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
+    <link rel="icon" href="{{ url_for('static', filename='img/favicon.ico') }}">
+
+</head>
+<body>
+    <div class="user-center-container">
+        <!-- 左侧导航栏 -->
+        <div class="sidebar">
+
+            <ul>
+                <li id="getUser" ><a href="#profile">管理员资料</a></li>
+                <li><a href="#changeProfile">修改信息</a></li>
+                <li><a href="#changePassword">修改密码</a></li>
+                <li><a href="#userAdmin">用户管理</a></li>
+                <li><a href="#userFeedback">用户反馈</a></li>
+                <li><a href="/">返回首页</a></li>
+            </ul>
+
+        </div>
+
+        <!-- 右侧内容区域 -->
+        <div class="content">
+            <!-- 个人资料 -->
+            <div class="contentpro">
+                <div id="profile" class="page page_1">
+                    <h2>管理员资料</h2>
+                    <div class="profile-info">
+                        <p><strong>用户ID:</strong> <span id="userId"></span></p>
+                        <p><strong>用户名:</strong> <span id="username"></span></p>
+                        <p><strong>昵称:</strong> <span id="nickname"></span></p>
+                        <p><strong>电子邮箱:</strong> <span id="email"></span></p>
+                        <p><strong>状态:</strong> <span id="status"></span></p>
+                    </div>
+    {#                <button id="editBtn">修改</button>#}
+                    <button id="deleteBtn">删除账户</button>
+                </div>
+            </div>
+            <!-- 修改信息 -->
+            <div class="contentpro">
+                <div id="changeProfile" class="page page_2">
+                    <h2>修改信息</h2>
+                    <form id="resetProfileForm">
+                        <div class="formGroup">
+                            <label for="username">昵称</label>
+                            <input type="text" id="changeusername" name="username" required>
+                        </div>
+                        <div class="formGroup">
+                            <label for="email">邮箱</label>
+                            <input type="email" id="changeemail" name="email" required>
+                        </div>
+                        <div class="formGroup">
+                            <label for="verificationCode">验证码</label>
+                            <input type="text" id="verificationCode" name="verificationCode" required>
+                            <br>
+                            <br>
+                            <button type="button" id="changesendCodeBtn">发送验证码</button>
+                        </div>
+                        <button type="submit">提交修改</button>
+                        <p id="errorMsg" class="error-msg"></p>
+                    </form>
+                </div>
+            </div>
+            <!-- 修改密码 -->
+            <div class="contentpro">
+                <div id="changePassword" class="page page_3">
+                    <h2>修改密码</h2>
+                    <form id="resetPasswordForm">
+                        <div class="formGroup">
+                            <label for="username">旧密码</label>
+                            <input type="password" id="changeOldPasswd" name="oldPassword" required>
+                        </div>
+                        <div class="formGroup">
+                            <label for="username">新密码</label>
+                            <input type="password" id="changeNewPasswd" name="newPassword" required>
+                        </div>
+                        <div class="formGroup">
+                            <label for="username">再次确认新密码</label>
+                            <input type="password" id="changeConfirmPassword" name="confirmNewPassword" required>
+                        </div>
+                        <button type="submit">确定修改</button>
+                        <p id="changeerrorMsg" class="error-msg"></p>
+                    </form>
+                </div>
+            </div>
+            <!-- 用户管理 -->
+            <div class="contentpro">
+                <div id="userAdmin" class="page page_4">
+                    <h2>用户管理</h2>
+                    <div id="userList">
+                        <table id="userTable">
+                            <thead>
+                                <tr>
+                                    <th>序号</th>
+                                    <th>用户ID</th>
+                                    <th>用户名</th>
+                                    <th>昵称</th>
+                                    <th>邮箱</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody id="userTableBody">
+                            </tbody>
+                        </table>
+                        <div id="pagination">
+                            <button id="prevPageBtn">上一页</button>
+                            <input type="number" id="pageInput" min="1" max="1000">
+                            <button id="jumpBtn">跳转</button>
+                            <button id="nextPageBtn">下一页</button>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- 用户反馈 -->
+            <div class="contentpro">
+                <div id="userFeedback" class="page page_5">
+                    <h2>用户反馈</h2>
+                    <div id="feedbackList">
+                        <table id="feedbackTable">
+                            <thead>
+                                <tr>
+                                    <th>序号</th>
+                                    <th>用户ID</th>
+                                    <th>用户名</th>
+                                    <th>昵称</th>
+                                    <th>邮箱</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody id="feedbackTableBody">
+                            </tbody>
+                        </table>
+                        <div id="feedbackPagination">
+                            <button id="feedbackPrevPageBtn">上一页</button>
+                            <input type="number" id="feedbackPageInput" min="1" max="1000">
+                            <button id="feedbackJumpBtn">跳转</button>
+                            <button id="feedbackNextPageBtn">下一页</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+        <!-- 编辑用户悬浮窗 -->
+        <div id="editModal" class="edit-modal" style="display: none;"></div>
+        <div id="editModalFeed" class="edit-modal-feed" style="display: none;"></div>
+    </div>
+</body>
+
+<script>
+    {#获取单个用户数据#}
+    let user = {}
+    user['userId'] = '{{ user.id }}';
+    user['username'] = '{{ user.username }}';
+    user['nickname'] = '{{ user.nickname }}';
+    user['email'] = '{{ user.email }}';
+    user['status'] = '{{ user.status }}';
+    if (user.email === 'None'){
+        user.email = '无';
+    }
+    // 删除用户
+    function deleteUser(userId) {
+        // 弹出确认框，询问用户是否要删除用户
+        const confirmDelete = confirm("确定要删除该用户吗？");
+
+        // 如果用户点击了确认按钮
+        if (confirmDelete) {
+            // 发起 DELETE 请求到 Flask 后端的删除用户 API
+            fetch(`/deleteuser/${userId}`, {
+                method: 'DELETE'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.msg === 'success') {
+                    console.log(`用户 ${userId} 删除成功`);
+                    // 删除成功后刷新页面
+                    location.reload();
+                } else {
+                    alert('删除用户失败:' + data.msg);
+                }
+            })
+            .catch(error => console.error('删除用户失败:', error));
+        } else {
+            // 如果用户点击了取消按钮，不执行任何操作
+            console.log("用户取消了删除操作");
+        }
+
+    }
+    // 关闭编辑用户悬浮窗
+    function closeEditModal() {
+        const editModal = document.getElementById('editModal');
+        editModal.style.display = 'none'; // 隐藏悬浮窗
+    }
+    function closeEditModalFeed() {
+        const editModal = document.getElementById('editModalFeed');
+        editModal.style.display = 'none'; // 隐藏悬浮窗
+    }
+    // 编辑用户
+    function editUser(userId) {
+        // 发起请求获取用户信息
+        fetch(`/admingetuser/${userId}`)
+            .then(response => response.json())
+            .then(userData => {
+                console.log(userData)
+                if(userData.msg === 'success'){
+                    // 创建编辑用户的悬浮窗
+                    let user = userData.data
+                    const editModal = document.getElementById('editModal');
+                    editModal.innerHTML = `
+                        <h3>编辑用户</h3>
+                        <label for="editusername">用户名：</label>
+                        <input type="text" id="editusername" value="${user.username}" required><br>
+                        <label for="nickname">昵称：</label>
+                        <input type="text" id="editnickname" value="${user.nickname}"><br>
+                        <label for="editemail">邮箱：</label>
+                        <input type="email" id="editemail" value="${user.email}" required><br>
+                        <div style="text-align: center; margin-top: 20px;">
+                        <button onmouseover="this.style.backgroundColor='#b03434'" class='red-button' style="" onclick="resetPassword(${userId})">重置密码</button>
+                        <button onclick="submitEdit(${userId})">提交</button>
+                        <button onclick="closeEditModal()">取消</button>
+                        </div>
+
+                    `;
+                    // 显示悬浮窗
+                    editModal.style.display = 'block';
+                }
+                else {
+                    alert(userData.msg)
+                }
+
+            })
+            .catch(error => console.error('获取用户信息失败:', error));
+    }
+    // 提交编辑
+    function submitEdit(userId) {
+        const username = document.getElementById('editusername').value;
+        const nickname = document.getElementById('editnickname').value;
+        const email = document.getElementById('editemail').value;
+        // 构建要提交的用户信息对象
+        const userData = {
+            username: username,
+            nickname: nickname,
+            email: email
+        };
+        // 发起请求更新用户信息
+        fetch(`/adminupdateuser/${userId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(userData)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.msg === 'success') {
+                console.log(`用户 ${userId} 信息更新成功`);
+                // 关闭编辑窗口
+                closeEditModal();
+                // 刷新页面或其他操作
+                location.reload();
+            } else {
+                alert(`用户 ${userId} 信息更新失败:`)
+            }
+        })
+        .catch(error => console.error('更新用户信息失败:', error));
+    }
+    // 重置密码
+    function resetPassword(userId) {
+        // 发起请求重置用户密码
+        fetch(`/adminresetuser/${userId}`, {
+            method: 'POST'
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.msg === 'success') {
+                console.log(`用户 ${userId} 密码重置成功`);
+                alert('用户 ' + userId +' 密码重置成功')
+                // 关闭编辑窗口
+                closeEditModal();
+                // 刷新页面或其他操作
+                location.reload();
+            } else {
+                alert('用户 ' + userId +' 密码重置失败')
+            }
+        })
+        .catch(error => console.error('重置用户密码失败:', error));
+    }
+    // 删除用户反馈
+    function deleteFeedback(feedId) {
+        if (confirm('确认删除该用户反馈吗？')) {
+            fetch(`/deletefeedback/${feedId}`, {
+                method: 'DELETE'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.msg === 'success') {
+                    console.log(`用户反馈 ${feedId} 删除成功`);
+                    location.reload()
+                } else {
+                    console.error(`删除用户反馈 ${feedId} 失败:`, data.msg);
+                }
+            })
+            .catch(error => console.error('删除用户反馈失败:', error));
+        }
+    }
+    // 编辑用户反馈
+    function editFeedback(feedbackId) {
+        // 发起请求获取用户反馈信息
+        fetch(`/admingetfeedback/${feedbackId}`)
+            .then(response => response.json())
+            .then(feedbackData => {
+                if (feedbackData.msg === 'success') {
+                    // 创建编辑用户反馈的悬浮窗
+                    const editModal = document.getElementById('editModalFeed');
+                    const feedback = feedbackData.data;
+
+                    editModal.innerHTML = `
+                        <h3>用户反馈</h3>
+                        <div style="text-align: center; margin-top: 20px;">
+                            <label for="feedbackContent">用户反馈内容：</label>
+                            <textarea id="feedbackContent">${feedback.content}</textarea><br>
+                            <label for="replyContent">回复内容：</label>
+                            <textarea id="replyContent"></textarea><br>
+                        </div>
+                        <div style="text-align: center; margin-top: 20px;">
+                            <button onclick="submitFeedback(${feedbackId})">提交</button>
+                            <button onclick="closeEditModalFeed()">取消</button>
+                        </div>
+                    `;
+                    // 显示悬浮窗
+                    editModal.style.display = 'block';
+                } else {
+                    alert(feedbackData.msg);
+                }
+            })
+            .catch(error => console.error('获取用户反馈信息失败:', error));
+    }
+    // 提交用户反馈编辑
+    function submitFeedback(feedbackId) {
+        // 获取用户输入的反馈内容和回复内容
+        const feedbackContent = document.getElementById('feedbackContent').value;
+        const replyContent = document.getElementById('replyContent').value;
+        console.log(feedbackContent)
+        console.log(replyContent)
+        // 构建要提交的数据对象
+        const data = {
+            feedbackId: feedbackId,
+            replyContent: replyContent
+        };
+
+        // 发起请求更新用户反馈信息
+        fetch(`/submitfeed/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.msg === 'success') {
+                console.log(`用户反馈 ${feedbackId} 信息更新成功`);
+                // 关闭编辑窗口
+                closeEditModal();
+                // 刷新页面或其他操作
+                location.reload();
+            } else {
+                alert("用户反馈 ${feedbackId} 信息更新失败:")
+            }
+        })
+        .catch(error => console.error('更新用户反馈信息失败:', error));
+    }
+
+
+    {#修改密码#}
+    document.addEventListener('DOMContentLoaded', function () {
+        const resetPasswordForm = document.getElementById('resetPasswordForm');
+        const errorMsg = document.getElementById('changeerrorMsg');
+        resetPasswordForm.addEventListener('submit', function (event) {
+            event.preventDefault(); // 阻止表单默认提交行为
+            // 获取表单数据
+            function hashPasswordWithCryptoJS(password) {
+                // 使用CryptoJS的SHA256进行哈希
+                const hash = CryptoJS.SHA256(password);
+                // 转换为十六进制字符串
+                const hashHex = hash.toString(CryptoJS.enc.Hex);
+                return hashHex;
+            }
+            const formData = new FormData(resetPasswordForm);
+            const changeOldPasswd = formData.get('oldPassword')
+            const changeNewPasswd = formData.get('newPassword')
+            const changeConfirmPassword = formData.get('confirmNewPassword')
+            {#console.log(0)#}
+            if (changeNewPasswd !== changeConfirmPassword) {
+                errorMsg.textContent = '新密码与确认新密码不匹配';
+                {#console.log(formData)#}
+                {#alert('新密码与确认新密码不匹配' + changeOldPasswd + ' ' + changeNewPasswd + ' ' +  changeConfirmPassword)#}
+                return;
+            }else if (changeOldPasswd === changeNewPasswd) {
+                errorMsg.textContent = '新密码不能和旧密码相同';
+                return;
+            }
+            const hashedPassword_new = hashPasswordWithCryptoJS(changeNewPasswd);
+            formData.set('newPassword', hashedPassword_new);
+            const hashedPassword_old = hashPasswordWithCryptoJS(changeOldPasswd);
+            formData.set('oldPassword', hashedPassword_old);
+            console.log(hashedPassword_new)
+            console.log(hashedPassword_old)
+            // 向后端发送 POST 请求
+            fetch('/resetpasswd/', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('网络链接失败');
+                }
+                return response.json(); // 将响应解析为 JSON 对象
+            })
+            .then(data => {
+                // 根据后端返回的 JSON 数据执行相应操作
+                if (data.msg === 'success') {
+                    // 重置密码成功
+                    alert('信息修改成功！');
+                    window.location.href = '/login/'
+                } else {
+                    // 重置密码失败，显示错误消息
+                    errorMsg.textContent = data.msg;
+                }
+            })
+            .catch(error => {
+                console.error('错误:', error);
+            });
+        });
+    });
+    {#修改信息#}
+    document.addEventListener('DOMContentLoaded', function () {
+        const resetPasswordForm = document.getElementById('resetProfileForm');
+        const errorMsg = document.getElementById('errorMsg');
+        const resetNickname = document.getElementById('changeusername')
+        const resetEmail = document.getElementById('changeemail')
+        resetNickname.value = user.nickname
+        resetEmail.value = user.email
+        resetPasswordForm.addEventListener('submit', function (event) {
+            event.preventDefault(); // 阻止表单默认提交行为
+            // 获取表单数据
+            const formData = new FormData(resetPasswordForm);
+            // 向后端发送 POST 请求
+            fetch('/changeuser/', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('网络链接失败');
+                }
+                return response.json(); // 将响应解析为 JSON 对象
+            })
+            .then(data => {
+                errorMsg.textContent = '';
+                // 根据后端返回的 JSON 数据执行相应操作
+                if (data.msg === 'success') {
+                    // 重置密码成功
+                    alert('信息修改成功！');
+                    window.location.href = '/login/'
+                } else {
+                    // 重置密码失败，显示错误消息
+                    errorMsg.textContent = data.msg;
+                }
+            })
+            .catch(error => {
+                console.error('错误:', error);
+            });
+        });
+    });
+    {#发送邮箱#}
+    document.addEventListener('DOMContentLoaded', function () {
+    const sendCodeBtn = document.getElementById('changesendCodeBtn');
+    const emailInput = document.getElementById('changeemail');
+    const usernameInput = document.getElementById('changeusername');
+    let countdown = 3; // 倒计时时长，单位为秒
+    sendCodeBtn.addEventListener('click', function () {
+        // 验证邮箱是否为空
+        console.log(emailInput.value)
+        if (!emailInput.value.trim()) {
+            alert('请输入邮箱');
+            return;
+        }else if (!validateEmail(emailInput.value.trim())) {
+            alert('请输入有效的邮箱地址');
+            return;
+        }
+        if (!usernameInput.value.trim()) {
+            alert('请输入用户名');
+            return;
+        }
+
+        // 禁用按钮防止重复点击
+        sendCodeBtn.disabled = true;
+
+        // 发送请求到后端
+        fetch('/changeemail/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ email: emailInput.value, username:usernameInput.value })
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('网络链接失败');
+            }
+            return response.json(); // 将响应解析为 JSON 对象
+
+
+        })
+        .then(data =>{
+            console.log(1)
+            console.log(data)
+            if(data.msg === 'success'){
+                startCountdown();
+                countdown = 3
+            }
+            else {
+                alert(data.msg);
+            }
+
+        })
+        .catch(error => {
+            console.error('发送验证码失败:', error);
+        });
+    });
+
+    // 验证邮箱格式
+    function validateEmail(email) {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return emailRegex.test(email);
+    }
+
+    // 倒计时函数
+    function startCountdown() {
+        sendCodeBtn.classList.add('btnDisabled');
+        sendCodeBtn.disabled = true; // 可以在这里明确地再次禁用按钮，双重保险
+        const timer = setInterval(function () {
+            if (countdown <= 1) {
+                clearInterval(timer);
+                sendCodeBtn.innerText = '发送验证码';
+                sendCodeBtn.classList.remove('btnDisabled');
+                sendCodeBtn.disabled = false; // 恢复按钮可点击状态
+
+                // 强制触发按钮点击事件
+                {#sendCodeBtn.onclick();#}
+
+                // 或者尝试手动触发点击事件
+                // sendCodeBtn.dispatchEvent(new Event('click'));
+            } else {
+                sendCodeBtn.innerText = `${countdown - 1}秒`;
+                countdown--;
+            }
+        }, 1000);
+    }
+    });
+    {#删除用户#}
+    document.addEventListener('DOMContentLoaded', function () {
+    const deleteBtn = document.getElementById('deleteBtn');
+
+    deleteBtn.addEventListener('click', function () {
+        const confirmDelete = confirm('确定要删除用户吗？');
+        if (confirmDelete) {
+            // 用户点击了确定，向后端发送删除请求
+            fetch('/deluser/', {
+                method: 'DELETE'
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('网络请求失败');
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.msg === 'success') {
+                    // 删除成功
+                    window.location.href = '/'
+                } else {
+                    throw new Error(data.msg);
+                }
+            })
+            .catch(error => {
+                console.error('删除用户失败:', error);
+            });
+        } else {
+            // 用户点击了取消，不执行任何操作
+        }
+    });
+});
+    {#获取用户信息#}
+    document.addEventListener('DOMContentLoaded', function () {
+    const getUserNavItem = document.getElementById('getUser');
+    const profilePage = document.getElementById('profile');
+    const userIdSpan = document.getElementById('userId');
+    const usernameSpan = document.getElementById('username');
+    const nicknameSpan = document.getElementById('nickname');
+    const emailSpan = document.getElementById('email');
+    const statusSpan = document.getElementById('status');
+    getUserNavItem.addEventListener('click', function () {
+        fetch('/getuser/') // 发送到后端的路由
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('网络请求失败');
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.msg === 'success') {
+                    // 成功获取用户信息，将数据渲染到页面上
+                    user['userId'] = data.data.userid;
+                    user['username'] = data.data.username;
+                    user['nickname'] = data.data.nickname;
+                    user['email'] = data.data.email;
+                    user['status'] = data.data.status;
+                    if (user.email === null){
+                        user.email = '无';
+                    }
+                    console.log(user.email)
+                    userIdSpan.textContent = user.userId
+                    usernameSpan.textContent = user.username;
+                    nicknameSpan.textContent = user.nickname;
+                    emailSpan.textContent = user.email;
+                    statusSpan.textContent = user.status;
+
+
+                    // 显示用户资料页面
+                    profilePage.style.display = 'block';
+                } else {
+                    throw new Error(data.msg);
+                }
+            })
+            .catch(error => {
+                console.error('获取用户信息失败:', error);
+            });
+    });
+});
+    {#导航切换#}
+    document.addEventListener('DOMContentLoaded', function () {
+        const sidebarItems = document.querySelectorAll('.sidebar li');
+        const pages = document.querySelectorAll('.page');
+
+        sidebarItems.forEach(function (item, index) {
+            item.addEventListener('click', function () {
+                // 高亮当前选中的导航项
+                sidebarItems.forEach(function (item) {
+                    item.classList.remove('active');
+                });
+                item.classList.add('active');
+
+                // 隐藏所有页面
+                pages.forEach(function (page) {
+                    page.style.display = 'none';
+                });
+
+                // 显示对应的页面
+                pages[index].style.display = 'block';
+            });
+        });
+    });
+    {#用户管理#}
+    document.addEventListener('DOMContentLoaded', function () {
+        let allUsers = []; // 存储所有用户数据
+        let currentPage = 1;
+        const pageSize = 10; // 每页显示条目数
+        // 获取所有用户数据
+        function fetchAllUsers() {
+            fetch('/getalluser/')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.msg === 'success') {
+                        allUsers = data.data;
+                        renderUserList(currentPage);
+                        updatePageInput(); // 更新页码输入框的值
+                    } else {
+                        console.error('获取用户数据失败:', data.msg);
+                    }
+                })
+                .catch(error => console.error('获取用户数据失败:', error));
+        }
+        // 渲染用户列表
+        function renderUserList(page) {
+            const userListBody = document.getElementById('userTableBody');
+            userListBody.innerHTML = ''; // 清空表格内容
+            const startIndex = (page - 1) * pageSize;
+            const endIndex = Math.min(startIndex + pageSize, allUsers.length);
+
+            for (let i = startIndex; i < endIndex; i++) {
+                const user = allUsers[i];
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${i + 1}</td>
+                    <td>${user.userid}</td>
+                    <td>${user.username}</td>
+                    <td>${user.nickname}</td>
+                    <td>${user.email}</td>
+                    <td>
+                        <button onclick="editUser(${user.userid})">编辑</button>
+                        <button class="red-button" onclick="deleteUser(${user.userid})">删除</button>
+                    </td>
+                `;
+                userListBody.appendChild(row);
+            }
+        }
+        // 更新页码输入框的值为当前页数
+        function updatePageInput() {
+            const pageInput = document.getElementById('pageInput');
+            pageInput.value = currentPage;
+        }
+        // 上一页
+        document.getElementById('prevPageBtn').addEventListener('click', function () {
+            if (currentPage > 1) {
+                currentPage--;
+                renderUserList(currentPage);
+                updatePageInput(); // 更新页码输入框的值
+            }
+        });
+        // 下一页
+        document.getElementById('nextPageBtn').addEventListener('click', function () {
+            const totalPages = Math.ceil(allUsers.length / pageSize);
+            if (currentPage < totalPages) {
+                currentPage++;
+                renderUserList(currentPage);
+                updatePageInput(); // 更新页码输入框的值
+            }
+        });
+        // 跳转到指定页码
+        document.getElementById('jumpBtn').addEventListener('click', function () {
+            const pageInput = document.getElementById('pageInput');
+            const targetPage = parseInt(pageInput.value);
+            const totalPages = Math.ceil(allUsers.length / pageSize);
+
+            if (!isNaN(targetPage) && targetPage >= 1 && targetPage <= totalPages) {
+                currentPage = targetPage;
+                renderUserList(currentPage);
+            } else {
+                alert('请输入有效的页码！');
+            }
+        });
+        // 初始化
+        fetchAllUsers();
+    });
+    {#用户反馈#}
+    document.addEventListener('DOMContentLoaded', function () {
+        let allFeedbacks = []; // 存储所有反馈数据
+        let currentFeedbackPage = 1;
+        const feedbackPageSize = 10; // 每页显示条目数
+
+        // 获取所有反馈数据
+        function fetchAllFeedbacks() {
+            fetch('/getallfeedback/')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.msg === 'success') {
+                        allFeedbacks = data.data;
+                        renderFeedbackList(currentFeedbackPage);
+                        updateFeedbackPageInput(); // 更新页码输入框的值
+                    } else {
+                        console.error('获取反馈数据失败:', data.msg);
+                    }
+                })
+                .catch(error => console.error('获取反馈数据失败:', error));
+        }
+
+        // 渲染反馈列表
+        function renderFeedbackList(page) {
+            const feedbackListBody = document.getElementById('feedbackTableBody');
+            feedbackListBody.innerHTML = ''; // 清空表格内容
+            const startIndex = (page - 1) * feedbackPageSize;
+            const endIndex = Math.min(startIndex + feedbackPageSize, allFeedbacks.length);
+
+            for (let i = startIndex; i < endIndex; i++) {
+                const feedback = allFeedbacks[i];
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${i + 1}</td>
+                    <td>${feedback.userid}</td>
+                    <td>${feedback.username}</td>
+                    <td>${feedback.nickname}</td>
+                    <td>${feedback.email}</td>
+                    <td>
+                        <button onclick="editFeedback(${feedback.feedid})">修改</button>
+                        <button class="red-button"  onclick="deleteFeedback(${feedback.feedid})">删除</button>
+                    </td>
+                `;
+                feedbackListBody.appendChild(row);
+            }
+        }
+        // 更新页码输入框的值为当前页数
+        function updateFeedbackPageInput() {
+            const pageInput = document.getElementById('feedbackPageInput');
+            pageInput.value = currentFeedbackPage;
+        }
+        // 上一页
+        document.getElementById('feedbackPrevPageBtn').addEventListener('click', function () {
+            if (currentFeedbackPage > 1) {
+                currentFeedbackPage--;
+                renderFeedbackList(currentFeedbackPage);
+                updateFeedbackPageInput(); // 更新页码输入框的值
+            }
+        });
+        // 下一页
+        document.getElementById('feedbackNextPageBtn').addEventListener('click', function () {
+            const totalPages = Math.ceil(allFeedbacks.length / feedbackPageSize);
+            if (currentFeedbackPage < totalPages) {
+                currentFeedbackPage++;
+                renderFeedbackList(currentFeedbackPage);
+                updateFeedbackPageInput(); // 更新页码输入框的值
+            }
+        });
+        // 跳转到指定页码
+        document.getElementById('feedbackJumpBtn').addEventListener('click', function () {
+            const pageInput = document.getElementById('feedbackPageInput');
+            const targetPage = parseInt(pageInput.value);
+            const totalPages = Math.ceil(allFeedbacks.length / feedbackPageSize);
+            if (!isNaN(targetPage) && targetPage >= 1 && targetPage <= totalPages) {
+                currentFeedbackPage = targetPage;
+                renderFeedbackList(currentFeedbackPage);
+            } else {
+                alert('请输入有效的页码！');
+            }
+        });
+        // 初始化
+        fetchAllFeedbacks();
+    });
+
+</script>
+
+</html>

@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+<head>
+  <meta charset="UTF-8">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/index.css') }}">
+    <link rel="icon" href="{{ url_for('static', filename='img/favicon.ico') }}">
+    <title></title>
+
+</head>
+<body>
+    <div class="index">
+        <div class="aside">
+            <div class="aside_logo">
+                <p style="font-size: 30px"> 图片文字识别</p>
+                <br>
+                <p>识别图片中的文字内容并保存成文本文件，支持JPG,JPEG,PNG,BMP,TIFF,PDF等多种格式。</p>
+
+            </div>
+            <div class="aside_app_download">
+
+                <p>客户端下载</p>
+            </div>
+            <div class="aside_user">
+                <p>用户登录</p>
+                {% if username %}
+                    <p> hello  {{ username }}</p>
+                    <a href="/#">用户中心</a>
+                    <a href="/logout/">退出</a>
+                {% else %}
+                    <a href="/login/">登录 </a>|
+                    <a href="/login/">注册</a>
+                {% endif %}
+                <p><a href="#">意见反馈</a></p>
+            </div>
+        </div>
+        <div class="main">图片文字提取（OCR）
+            <div class="main_upload">
+                <div class="upload_file"> 文件上传</div>
+                <div class="file_display">
+                </div>
+                <div class="main_sub">
+                    提交
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+
+<style>
+
+</style>
+
+</html>

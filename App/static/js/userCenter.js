@@ -1,0 +1,1065 @@
+// {#获取单个用户数据#}
+let user = {}
+user['userId'] = '{{ user.id }}';
+user['username'] = '{{ user.username }}';
+user['nickname'] = '{{ user.nickname }}';
+user['email'] = '{{ user.email }}';
+user['status'] = '{{ user.status }}';
+if (user.email === 'None'){
+    user.email = '无';
+}
+
+const deleteSelectedBtn = document.getElementById('deleteSelectedBtn');
+const selectedImages = [];
+let nowPopup = null;
+function displayPopup(image) {
+    // 创建悬浮窗容器元素
+    const popup = document.createElement('div');
+    popup.classList.add('popup');
+    nowPopup = popup;
+    // 创建标题元素
+    const title = document.createElement('h2');
+    title.textContent = '图片详情';
+
+    // 创建内容容器
+    const contentContainer = document.createElement('div');
+    contentContainer.classList.add('content-container');
+
+    // 创建左侧显示图片的容器
+    const imgContainer = document.createElement('div');
+    imgContainer.classList.add('img-container');
+
+    // 创建并设置图片元素
+    const imgElement = document.createElement('img');
+    imgElement.src = image.img_path;
+    imgElement.alt = 'Image';
+
+    // 设置图片样式，限制最大宽度和高度
+    imgElement.style.maxWidth = '100%'; // 图片宽度不超过容器宽度
+    // {#imgElement.style.maxHeight = '300px'; // 设置图片最大高度#}
+
+    imgContainer.appendChild(imgElement);
+
+    // 创建右侧显示图片文本的容器
+    const textContainer = document.createElement('div');
+    textContainer.classList.add('text-container');
+
+    // 创建并设置图片文本元素
+    const imgText = document.createElement('p');
+    imgText.textContent = image.img_text;
+    textContainer.appendChild(imgText);
+
+    // 将左右容器添加到内容容器中
+    contentContainer.appendChild(imgContainer);
+    contentContainer.appendChild(textContainer);
+
+    // 将标题和内容容器添加到悬浮窗中
+    popup.appendChild(title);
+    popup.appendChild(contentContainer);
+
+    // 将悬浮窗添加到页面中
+    document.body.appendChild(popup);
+
+    // 点击悬浮窗以外的区域关闭悬浮窗
+    popup.addEventListener('click', event => {
+        if (event.target === popup) {
+            popup.style.display = 'none';
+            document.body.removeChild(popup);
+            nowPopup = null
+
+        }
+    });
+}
+
+
+// {#获取图片#}
+document.addEventListener('DOMContentLoaded', async function () {
+    // 模拟图片数据，实际情况从后端获取
+    const imageDataResponse = await fetch('/getimgdata/');
+    const jsonData = await imageDataResponse.json();
+    if (jsonData.msg === 'success'){
+        imageData = jsonData.data
+        for (let i = 0; i < imageData.length; i ++) {
+            imageData[i].img_path = imageData[i].img_path.replace(/\\/g, '/');
+            imageData[i].id = i + 1;
+        }
+    }
+    // {#console.log(imageData)#}
+
+    const thumbnailsContainer = document.getElementById('thumbnailsContainer');
+    const paginationContainer = document.getElementById('paginationContainer');
+
+    // 每页显示的缩略图数量
+    const thumbnailsPerPage = 50;
+
+    // 计算总页数
+    const totalPages = Math.ceil(imageData.length / thumbnailsPerPage);
+    // 根据当前页数和每页数量，获取应该显示的图片数据
+    function getImagesForPage(page) {
+        const startIndex = (page - 1) * thumbnailsPerPage;
+        const endIndex = Math.min(startIndex + thumbnailsPerPage, imageData.length);
+        return imageData.slice(startIndex, endIndex);
+    }
+
+    // 渲染缩略图
+    function renderThumbnails(images) {
+        thumbnailsContainer.innerHTML = '';
+
+        images.forEach(image => {
+            const thumbnail = document.createElement('div');
+            thumbnail.classList.add('thumbnail');
+
+            // 创建复选框并设置其属性
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.value = image.img_id; // 将图片的 img_id 设置为复选框的值
+            thumbnail.appendChild(checkbox);
+
+            // 创建并设置 img 标签，同时限制其宽度和高度
+            const imgElement = document.createElement('img');
+            imgElement.src = image.img_path;
+            imgElement.style.width = '100px'; // 示例值，设置合适的宽度
+            imgElement.style.height = 'auto'; // 自动保持宽高比
+            imgElement.style.objectFit = 'cover'; // 保证图片填充容器且不失真
+            thumbnail.appendChild(imgElement);
+            // 添加点击事件监听器来显示悬浮窗
+            imgElement.addEventListener('click', () => {
+                // 在这里调用显示悬浮窗的函数，并传递图片对象image
+                if (nowPopup !== null) {
+                    nowPopup.style.display = 'none';
+                    document.body.removeChild(nowPopup);
+                    nowPopup = null
+
+                }
+
+                displayPopup(image);
+            });
+            // 创建图片ID的文字描述
+            // const idText = document.createElement('p');
+            // idText.textContent = `Image ID: ${image.img_id}`;
+            // thumbnail.appendChild(idText);
+            thumbnail.appendChild(imgElement);
+            thumbnailsContainer.appendChild(thumbnail);
+        });
+    }
+
+    thumbnailsContainer.addEventListener('change', (event) => {
+        const checkbox = event.target;
+        const imgId = checkbox.value;
+
+        if (checkbox.checked) {
+            // 将选中的 img_id 添加到数组中
+            selectedImages.push(imgId);
+        } else {
+            // 如果取消选中，则从数组中移除对应的 img_id
+            const index = selectedImages.indexOf(imgId);
+            if (index !== -1) {
+                selectedImages.splice(index, 1);
+            }
+        }
+    });
+
+    // 渲染分页按钮
+    function renderPaginationButtons_less() {
+        paginationContainer.innerHTML = '';
+        for (let i = 1; i <= totalPages; i++) {
+            const button = document.createElement('button');
+            button.textContent = i;
+            button.addEventListener('click', () => {
+                const images = getImagesForPage(i);
+                renderThumbnails(images);
+                highlightActiveButton(i);
+                nowPage = i
+                console.log(nowPage)
+            });
+            paginationContainer.appendChild(button);
+        }
+    }
+    function renderPaginationButtons_more() {
+        paginationContainer.innerHTML = '';
+        if (nowPage === 1) {
+            // {#上一页无点击#}
+            const button_pre = document.createElement('button');
+            button_pre.textContent = '上一页'
+            paginationContainer.appendChild(button_pre);
+
+            for (let i = 1; i < 4; i ++) {
+                const button_1 = document.createElement('button');
+                button_1.textContent = i
+                button_1.addEventListener('click', () => {
+                    nowPage = i
+                    renderPaginationButtons_more()
+                    const images = getImagesForPage(nowPage);
+                    renderThumbnails(images);
+                    highlightActiveButton(i + 1);
+                    console.log(nowPage)
+                });
+                paginationContainer.appendChild(button_1);
+            }
+            const button_4 = document.createElement('button');
+            button_4.textContent = 4
+            button_4.addEventListener('click', () => {
+                nowPage = 4
+                renderPaginationButtons_more()
+                const images = getImagesForPage(nowPage);
+                renderThumbnails(images);
+                highlightActiveButton(4);
+                console.log(nowPage)
+            });
+            paginationContainer.appendChild(button_4);
+            const span_end = document.createElement('span');
+            span_end.textContent = '...'
+            paginationContainer.appendChild(span_end);
+
+            const button_end = document.createElement('button');
+            button_end.textContent = totalPages
+            button_end.addEventListener('click', () => {
+                nowPage = totalPages
+                renderPaginationButtons_more()
+                const images = getImagesForPage(nowPage);
+                renderThumbnails(images);
+                highlightActiveButton(6);
+                console.log(nowPage)
+
+            });
+            paginationContainer.appendChild(button_end);
+
+            const button_next = document.createElement('button');
+            button_next.textContent = '下一页'
+            button_next.addEventListener('click', () => {
+                    nowPage ++
+                    renderPaginationButtons_more()
+                    const images = getImagesForPage(nowPage);
+                    renderThumbnails(images);
+                    highlightActiveButton(nowPage + 1);
+                    console.log(nowPage)
+                });
+            paginationContainer.appendChild(button_next);
+        }
+        else if (nowPage === 2) {
+            const button_pre = document.createElement('button');
+            button_pre.textContent = '上一页'
+            button_pre.addEventListener('click', () => {
+                    nowPage = 1
+                    if(nowPage > totalPages){
+                        nowPage = totalPages
+                        return
+                    }
+                    renderPaginationButtons_more()
+                    const images = getImagesForPage(nowPage);
+                    renderThumbnails(images);
+                    highlightActiveButton(2);
+                    console.log(nowPage)
+                });
+            paginationContainer.appendChild(button_pre);
+
+            const button_1 = document.createElement('button');
+            button_1.textContent = 1
+            button_1.addEventListener('click', () => {
+                nowPage = 1
+                renderPaginationButtons_more()
+                const images = getImagesForPage(nowPage);
+                renderThumbnails(images);
+                highlightActiveButton(2);
+                console.log(nowPage)
+            });
+            paginationContainer.appendChild(button_1);
+
+            const button_2 = document.createElement('button');
+            button_2.textContent = 2
+            button_2.addEventListener('click', () => {
+                nowPage = 2
+                renderPaginationButtons_more()
+                const images = getImagesForPage(nowPage);
+                renderThumbnails(images);
+                highlightActiveButton(3);
+                console.log(nowPage)
+            });
+            paginationContainer.appendChild(button_2);
+
+            const button_3 = document.createElement('button');
+            button_3.textContent = 3
+            button_3.addEventListener('click', () => {
+                nowPage = 3
+                renderPaginationButtons_more()
+                const images = getImagesForPage(nowPage);
+                renderThumbnails(images);
+                highlightActiveButton(4);
+                console.log(nowPage)
+            });
+            paginationContainer.appendChild(button_3);
+
+            const button_4 = document.createElement('button');
+            button_4.textContent = 4
+            button_4.addEventListener('click', () => {
+                nowPage = 4
+                renderPaginationButtons_more()
+                const images = getImagesForPage(nowPage);
+                renderThumbnails(images);
+                highlightActiveButton(4);
+                console.log(nowPage)
+            });
+            paginationContainer.appendChild(button_4);
+            const span_end = document.createElement('span');
+            span_end.textContent = '...'
+            paginationContainer.appendChild(span_end);
+            const button_end = document.createElement('button');
+            button_end.textContent = totalPages
+            button_end.addEventListener('click', () => {
+                nowPage = totalPages
+                renderPaginationButtons_more()
+                const images = getImagesForPage(nowPage);
+                renderThumbnails(images);
+                highlightActiveButton(6);
+                console.log(nowPage)
+
+            });
+            paginationContainer.appendChild(button_end);
+
+            const button_next = document.createElement('button');
+            button_next.textContent = '下一页'
+            button_next.addEventListener('click', () => {
+                    nowPage ++
+                    renderPaginationButtons_more()
+                    const images = getImagesForPage(nowPage);
+                    renderThumbnails(images);
+                    highlightActiveButton(nowPage + 1);
+                    console.log(nowPage)
+                });
+            paginationContainer.appendChild(button_next);
+
+        }
+        else if (nowPage === 3) {
+            const button_pre = document.createElement('button');
+            button_pre.textContent = '上一页'
+            button_pre.addEventListener('click', () => {
+                    nowPage = 2
+                    if(nowPage > totalPages){
+                        nowPage = totalPages
+                        return
+                    }
+                    renderPaginationButtons_more()
+                    const images = getImagesForPage(nowPage);
+                    renderThumbnails(images);
+                    highlightActiveButton(3);
+                    console.log(nowPage)
+                });
+            paginationContainer.appendChild(button_pre);
+
+
+            const button_1 = document.createElement('button');
+            button_1.textContent = 1
+            button_1.addEventListener('click', () => {
+                nowPage = 1
+                renderPaginationButtons_more()
+                const images = getImagesForPage(nowPage);
+                renderThumbnails(images);
+                highlightActiveButton(2);
+                console.log(nowPage)
+            });
+            paginationContainer.appendChild(button_1);
+            const button_2 = document.createElement('button');
+            button_2.textContent = 2
+            button_2.addEventListener('click', () => {
+                nowPage = 2
+                renderPaginationButtons_more()
+                const images = getImagesForPage(nowPage);
+                renderThumbnails(images);
+                highlightActiveButton(3);
+                console.log(nowPage)
+            });
+            paginationContainer.appendChild(button_2);
+            const button_3 = document.createElement('button');
+            button_3.textContent = 3
+            button_3.addEventListener('click', () => {
+                nowPage = 3
+                renderPaginationButtons_more()
+                const images = getImagesForPage(nowPage);
+                renderThumbnails(images);
+                highlightActiveButton(4);
+                console.log(nowPage)
+            });
+            paginationContainer.appendChild(button_3);
+            const button_4 = document.createElement('button');
+            button_4.textContent = 4
+            button_4.addEventListener('click', () => {
+                nowPage = 4
+                renderPaginationButtons_more()
+                const images = getImagesForPage(nowPage);
+                renderThumbnails(images);
+                highlightActiveButton(4);
+                console.log(nowPage)
+            });
+            paginationContainer.appendChild(button_4);
+            const span_end = document.createElement('span');
+            span_end.textContent = '...'
+            paginationContainer.appendChild(span_end);
+            const button_end = document.createElement('button');
+            button_end.textContent = totalPages
+            button_end.addEventListener('click', () => {
+                nowPage = totalPages
+                renderPaginationButtons_more()
+                const images = getImagesForPage(nowPage);
+                renderThumbnails(images);
+                highlightActiveButton(6);
+                console.log(nowPage)
+
+            });
+            paginationContainer.appendChild(button_end);
+
+            const button_next = document.createElement('button');
+            button_next.textContent = '下一页'
+            button_next.addEventListener('click', () => {
+                    nowPage ++
+                    renderPaginationButtons_more()
+                    const images = getImagesForPage(nowPage);
+                    renderThumbnails(images);
+                    highlightActiveButton(4);
+                    console.log(nowPage)
+                });
+            paginationContainer.appendChild(button_next);
+        }
+        else if (nowPage > 3 && nowPage < totalPages - 2) {
+            const button_pre = document.createElement('button');
+            button_pre.textContent = '上一页'
+            button_pre.addEventListener('click', () => {
+                    nowPage --
+                    if(nowPage > totalPages){
+                        nowPage = totalPages
+                        return
+                    }
+                    renderPaginationButtons_more()
+                    const images = getImagesForPage(nowPage);
+                    renderThumbnails(images);
+                    highlightActiveButton(4);
+                    console.log(nowPage)
+                });
+            paginationContainer.appendChild(button_pre);
+
+            const button_first = document.createElement('button');
+            button_first.textContent = 1
+            button_first.addEventListener('click', () => {
+                nowPage = 1
+                renderPaginationButtons_more()
+                const images = getImagesForPage(nowPage);
+                renderThumbnails(images);
+                highlightActiveButton(2);
+                console.log(nowPage)
+
+            });
+            paginationContainer.appendChild(button_first);
+            const span_first = document.createElement('span');
+            span_first.textContent = '...'
+            paginationContainer.appendChild(span_first);
+            for (let i = nowPage - 1; i <= nowPage + 1; i ++) {
+                const button = document.createElement('button');
+                button.textContent = i
+                button.addEventListener('click', () => {
+                    nowPage = i
+                    renderPaginationButtons_more()
+                    const images = getImagesForPage(nowPage);
+                    renderThumbnails(images);
+                    highlightActiveButton(4);
+                    console.log(nowPage)
+
+                });
+                paginationContainer.appendChild(button);
+            }
+            const span_end = document.createElement('span');
+            span_end.textContent = '...'
+            paginationContainer.appendChild(span_end);
+            const button_end = document.createElement('button');
+            button_end.textContent = totalPages
+            button_end.addEventListener('click', () => {
+                nowPage = totalPages
+                renderPaginationButtons_more()
+                const images = getImagesForPage(nowPage);
+                renderThumbnails(images);
+                highlightActiveButton(6);
+                console.log(nowPage)
+
+            });
+            paginationContainer.appendChild(button_end);
+
+            const button_next = document.createElement('button');
+            button_next.textContent = '下一页'
+            button_next.addEventListener('click', () => {
+                    nowPage ++
+                    renderPaginationButtons_more()
+                    const images = getImagesForPage(nowPage);
+                    renderThumbnails(images);
+                    highlightActiveButton(4);
+                    console.log(nowPage)
+                });
+            paginationContainer.appendChild(button_next);
+
+        }
+        else if (nowPage === totalPages - 2){
+
+            const button_pre = document.createElement('button');
+            button_pre.textContent = '上一页'
+            button_pre.addEventListener('click', () => {
+                    nowPage = totalPages - 3
+                    renderPaginationButtons_more()
+                    const images = getImagesForPage(nowPage);
+                    renderThumbnails(images);
+                    highlightActiveButton(4);
+                    console.log(nowPage)
+                });
+            paginationContainer.appendChild(button_pre);
+
+            const button_first = document.createElement('button');
+            button_first.textContent = 1
+            button_first.addEventListener('click', () => {
+                nowPage = 1
+                renderPaginationButtons_more()
+                const images = getImagesForPage(nowPage);
+                renderThumbnails(images);
+                highlightActiveButton(2);
+                console.log(nowPage)
+
+            });
+            paginationContainer.appendChild(button_first);
+            const span_first = document.createElement('span');
+            span_first.textContent = '...'
+            paginationContainer.appendChild(span_first);
+            const button_1 = document.createElement('button');
+            button_1.textContent = totalPages - 3
+            button_1.addEventListener('click', () => {
+                nowPage = totalPages - 3
+                renderPaginationButtons_more()
+                const images = getImagesForPage(nowPage);
+                renderThumbnails(images);
+                highlightActiveButton(3);
+                console.log(nowPage)
+            });
+            paginationContainer.appendChild(button_1);
+            const button_2 = document.createElement('button');
+            button_2.textContent = totalPages - 2
+            button_2.addEventListener('click', () => {
+                nowPage = totalPages - 2
+                renderPaginationButtons_more()
+                const images = getImagesForPage(nowPage);
+                renderThumbnails(images);
+                highlightActiveButton(4);
+                console.log(nowPage)
+            });
+            paginationContainer.appendChild(button_2);
+            const button_3 = document.createElement('button');
+            button_3.textContent = totalPages - 1
+            button_3.addEventListener('click', () => {
+                nowPage = totalPages - 1
+                renderPaginationButtons_more()
+                const images = getImagesForPage(nowPage);
+                renderThumbnails(images);
+                highlightActiveButton(5);
+                console.log(nowPage)
+            });
+            paginationContainer.appendChild(button_3);
+            const button_4 = document.createElement('button');
+            button_4.textContent = totalPages
+            button_4.addEventListener('click', () => {
+                nowPage = totalPages
+                renderPaginationButtons_more()
+                const images = getImagesForPage(nowPage);
+                renderThumbnails(images);
+                highlightActiveButton(6);
+                console.log(nowPage)
+            });
+            paginationContainer.appendChild(button_4);
+            const button_next = document.createElement('button');
+            button_next.textContent = '下一页'
+            button_next.addEventListener('click', () => {
+                nowPage = totalPages - 1
+                renderPaginationButtons_more()
+                const images = getImagesForPage(nowPage);
+                renderThumbnails(images);
+                highlightActiveButton(5);
+                console.log(nowPage)
+            });
+            paginationContainer.appendChild(button_next);
+        }
+        else if (nowPage === totalPages - 1){
+            const button_pre = document.createElement('button');
+            button_pre.textContent = '上一页'
+            button_pre.addEventListener('click', () => {
+                    nowPage --
+                    if(nowPage > totalPages){
+                        nowPage = totalPages
+                        return
+                    }
+                    renderPaginationButtons_more()
+                    const images = getImagesForPage(nowPage);
+                    renderThumbnails(images);
+                    highlightActiveButton(4);
+                    console.log(nowPage)
+                });
+            paginationContainer.appendChild(button_pre);
+
+            const button_first = document.createElement('button');
+            button_first.textContent = 1
+            button_first.addEventListener('click', () => {
+                nowPage = 1
+                renderPaginationButtons_more()
+                const images = getImagesForPage(nowPage);
+                renderThumbnails(images);
+                highlightActiveButton(2);
+                console.log(nowPage)
+
+            });
+            paginationContainer.appendChild(button_first);
+            const span_first = document.createElement('span');
+            span_first.textContent = '...'
+            paginationContainer.appendChild(span_first);
+            const button_1 = document.createElement('button');
+            button_1.textContent = totalPages - 3
+            button_1.addEventListener('click', () => {
+                nowPage = totalPages - 3
+                renderPaginationButtons_more()
+                const images = getImagesForPage(nowPage);
+                renderThumbnails(images);
+                highlightActiveButton(3);
+                console.log(nowPage)
+            });
+            paginationContainer.appendChild(button_1);
+            const button_2 = document.createElement('button');
+            button_2.textContent = totalPages - 2
+            button_2.addEventListener('click', () => {
+                nowPage = totalPages - 2
+                renderPaginationButtons_more()
+                const images = getImagesForPage(nowPage);
+                renderThumbnails(images);
+                highlightActiveButton(4);
+                console.log(nowPage)
+            });
+            paginationContainer.appendChild(button_2);
+            const button_3 = document.createElement('button');
+            button_3.textContent = totalPages - 1
+            button_3.addEventListener('click', () => {
+                nowPage = totalPages - 1
+                renderPaginationButtons_more()
+                const images = getImagesForPage(nowPage);
+                renderThumbnails(images);
+                highlightActiveButton(5);
+                console.log(nowPage)
+            });
+            paginationContainer.appendChild(button_3);
+            const button_4 = document.createElement('button');
+            button_4.textContent = totalPages
+            button_4.addEventListener('click', () => {
+                nowPage = totalPages
+                renderPaginationButtons_more()
+                const images = getImagesForPage(nowPage);
+                renderThumbnails(images);
+                highlightActiveButton(6);
+                console.log(nowPage)
+            });
+            paginationContainer.appendChild(button_4);
+            const button_next = document.createElement('button');
+            button_next.textContent = '下一页'
+            button_next.addEventListener('click', () => {
+                nowPage = totalPages
+                renderPaginationButtons_more()
+                const images = getImagesForPage(nowPage);
+                renderThumbnails(images);
+                highlightActiveButton(6);
+                console.log(nowPage)
+            });
+            paginationContainer.appendChild(button_next);
+        }
+        else if (nowPage === totalPages){
+            const button_pre = document.createElement('button');
+            button_pre.textContent = '上一页'
+            button_pre.addEventListener('click', () => {
+                    nowPage --
+                    if(nowPage > totalPages){
+                        nowPage = totalPages
+                        return
+                    }
+                    renderPaginationButtons_more()
+                    const images = getImagesForPage(nowPage);
+                    renderThumbnails(images);
+                    highlightActiveButton(5);
+                    console.log(nowPage)
+                });
+            paginationContainer.appendChild(button_pre);
+
+            const button_first = document.createElement('button');
+            button_first.textContent = 1
+            button_first.addEventListener('click', () => {
+                nowPage = 1
+                renderPaginationButtons_more()
+                const images = getImagesForPage(nowPage);
+                renderThumbnails(images);
+                highlightActiveButton(2);
+                console.log(nowPage)
+
+            });
+            paginationContainer.appendChild(button_first);
+            const span_first = document.createElement('span');
+            span_first.textContent = '...'
+            paginationContainer.appendChild(span_first);
+            const button_1 = document.createElement('button');
+            button_1.textContent = totalPages - 3
+            button_1.addEventListener('click', () => {
+                nowPage = totalPages - 3
+                renderPaginationButtons_more()
+                const images = getImagesForPage(nowPage);
+                renderThumbnails(images);
+                highlightActiveButton(4);
+                console.log(nowPage)
+            });
+            paginationContainer.appendChild(button_1);
+            const button_2 = document.createElement('button');
+            button_2.textContent = totalPages - 2
+            button_2.addEventListener('click', () => {
+                nowPage = totalPages - 2
+                renderPaginationButtons_more()
+                const images = getImagesForPage(nowPage);
+                renderThumbnails(images);
+                highlightActiveButton(4);
+                console.log(nowPage)
+            });
+            paginationContainer.appendChild(button_2);
+            const button_3 = document.createElement('button');
+            button_3.textContent = totalPages - 1
+            button_3.addEventListener('click', () => {
+                nowPage = totalPages - 1
+                renderPaginationButtons_more()
+                const images = getImagesForPage(nowPage);
+                renderThumbnails(images);
+                highlightActiveButton(5);
+                console.log(nowPage)
+            });
+            paginationContainer.appendChild(button_3);
+            const button_4 = document.createElement('button');
+            button_4.textContent = totalPages
+            button_4.addEventListener('click', () => {
+                nowPage = totalPages
+                renderPaginationButtons_more()
+                const images = getImagesForPage(nowPage);
+                renderThumbnails(images);
+                highlightActiveButton(6);
+                console.log(nowPage)
+            });
+            paginationContainer.appendChild(button_4);
+
+            const button_next = document.createElement('button');
+            button_next.textContent = '下一页'
+            paginationContainer.appendChild(button_next);
+        }
+    }
+
+    // 高亮当前页按钮
+    function highlightActiveButton(page) {
+        const buttons = paginationContainer.querySelectorAll('button');
+        buttons.forEach(button => {
+            button.classList.remove('active');
+        });
+        buttons[page - 1].classList.add('active');
+    }
+
+    // 默认渲染第一页
+    let nowPage = 1
+    const initialImages = getImagesForPage(1);
+    renderThumbnails(initialImages);
+    if (totalPages <= 20){
+        renderPaginationButtons_less();
+        highlightActiveButton(1);
+    }
+    else {
+        renderPaginationButtons_more()
+        highlightActiveButton(2);
+
+    }
+});
+// {#修改密码#}
+document.addEventListener('DOMContentLoaded', function () {
+    const resetPasswordForm = document.getElementById('resetPasswordForm');
+    const errorMsg = document.getElementById('changeerrorMsg');
+    resetPasswordForm.addEventListener('submit', function (event) {
+        event.preventDefault(); // 阻止表单默认提交行为
+        // 获取表单数据
+        function hashPasswordWithCryptoJS(password) {
+            // 使用CryptoJS的SHA256进行哈希
+            const hash = CryptoJS.SHA256(password);
+            // 转换为十六进制字符串
+            const hashHex = hash.toString(CryptoJS.enc.Hex);
+            return hashHex;
+        }
+        const formData = new FormData(resetPasswordForm);
+        const changeOldPasswd = formData.get('oldPassword')
+        const changeNewPasswd = formData.get('newPassword')
+        const changeConfirmPassword = formData.get('confirmNewPassword')
+        // {#console.log(0)#}
+        if (changeNewPasswd !== changeConfirmPassword) {
+            errorMsg.textContent = '新密码与确认新密码不匹配';
+            // {#console.log(formData)#}
+            // {#alert('新密码与确认新密码不匹配' + changeOldPasswd + ' ' + changeNewPasswd + ' ' +  changeConfirmPassword)#}
+            return;
+        }else if (changeOldPasswd === changeNewPasswd) {
+            errorMsg.textContent = '新密码不能和旧密码相同';
+            return;
+        }
+        const hashedPassword_new = hashPasswordWithCryptoJS(newPassword);
+        formData.set('newPassword', hashedPassword_new);
+        const hashedPassword_old = hashPasswordWithCryptoJS(oldPassword);
+        formData.set('oldPassword', hashedPassword_old);
+        console.log(hashedPassword_new)
+        console.log(hashedPassword_old)
+        // 向后端发送 POST 请求
+        fetch('/resetpasswd/', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('网络链接失败');
+            }
+            return response.json(); // 将响应解析为 JSON 对象
+        })
+        .then(data => {
+            // 根据后端返回的 JSON 数据执行相应操作
+            if (data.msg === 'success') {
+                // 重置密码成功
+                alert('信息修改成功！');
+                window.location.href = '/login/'
+            } else {
+                // 重置密码失败，显示错误消息
+                errorMsg.textContent = data.msg;
+            }
+        })
+        .catch(error => {
+            console.error('错误:', error);
+        });
+    });
+});
+// {#修改信息#}
+document.addEventListener('DOMContentLoaded', function () {
+    const resetPasswordForm = document.getElementById('resetProfileForm');
+    const errorMsg = document.getElementById('errorMsg');
+    const resetNickname = document.getElementById('changeusername')
+    const resetEmail = document.getElementById('changeemail')
+    resetNickname.value = user.nickname
+    resetEmail.value = user.email
+    resetPasswordForm.addEventListener('submit', function (event) {
+        event.preventDefault(); // 阻止表单默认提交行为
+        // 获取表单数据
+        const formData = new FormData(resetPasswordForm);
+        // 向后端发送 POST 请求
+        fetch('/changeuser/', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('网络链接失败');
+            }
+            return response.json(); // 将响应解析为 JSON 对象
+        })
+        .then(data => {
+            errorMsg.textContent = '';
+            // 根据后端返回的 JSON 数据执行相应操作
+            if (data.msg === 'success') {
+                // 重置密码成功
+                alert('信息修改成功！');
+                window.location.href = '/login/'
+            } else {
+                // 重置密码失败，显示错误消息
+                errorMsg.textContent = data.msg;
+            }
+        })
+        .catch(error => {
+            console.error('错误:', error);
+        });
+    });
+});
+// {#发送邮箱#}
+document.addEventListener('DOMContentLoaded', function () {
+    const sendCodeBtn = document.getElementById('changesendCodeBtn');
+    const emailInput = document.getElementById('changeemail');
+    const usernameInput = document.getElementById('changeusername');
+    let countdown = 3; // 倒计时时长，单位为秒
+    sendCodeBtn.addEventListener('click', function () {
+        // 验证邮箱是否为空
+        console.log(emailInput.value)
+        if (!emailInput.value.trim()) {
+            alert('请输入邮箱');
+            return;
+        }else if (!validateEmail(emailInput.value.trim())) {
+            alert('请输入有效的邮箱地址');
+            return;
+        }
+        if (!usernameInput.value.trim()) {
+            alert('请输入用户名');
+            return;
+        }
+
+        // 禁用按钮防止重复点击
+        sendCodeBtn.disabled = true;
+
+        // 发送请求到后端
+        fetch('/changeemail/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ email: emailInput.value, username:usernameInput.value })
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('网络链接失败');
+            }
+            return response.json(); // 将响应解析为 JSON 对象
+
+
+        })
+        .then(data =>{
+            console.log(1)
+            console.log(data)
+            if(data.msg === 'success'){
+                startCountdown();
+                countdown = 3
+            }
+            else {
+                alert(data.msg);
+            }
+
+        })
+        .catch(error => {
+            console.error('发送验证码失败:', error);
+        });
+    });
+
+    // 验证邮箱格式
+    function validateEmail(email) {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return emailRegex.test(email);
+    }
+
+    // 倒计时函数
+    function startCountdown() {
+        sendCodeBtn.classList.add('btnDisabled');
+        sendCodeBtn.disabled = true; // 可以在这里明确地再次禁用按钮，双重保险
+        const timer = setInterval(function () {
+            if (countdown <= 1) {
+                clearInterval(timer);
+                sendCodeBtn.innerText = '发送验证码';
+                sendCodeBtn.classList.remove('btnDisabled');
+                sendCodeBtn.disabled = false; // 恢复按钮可点击状态
+
+                // 强制触发按钮点击事件
+                // {#sendCodeBtn.onclick();#}
+
+                // 或者尝试手动触发点击事件
+                // sendCodeBtn.dispatchEvent(new Event('click'));
+            } else {
+                sendCodeBtn.innerText = `${countdown - 1}秒`;
+                countdown--;
+            }
+        }, 1000);
+    }
+});
+// {#删除用户#}
+document.addEventListener('DOMContentLoaded', function () {
+    const deleteBtn = document.getElementById('deleteBtn');
+
+    deleteBtn.addEventListener('click', function () {
+        const confirmDelete = confirm('确定要删除用户吗？');
+        if (confirmDelete) {
+            // 用户点击了确定，向后端发送删除请求
+            fetch('/deluser/', {
+                method: 'DELETE'
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('网络请求失败');
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.msg === 'success') {
+                    // 删除成功
+                    window.location.href = '/'
+                } else {
+                    throw new Error(data.msg);
+                }
+            })
+            .catch(error => {
+                console.error('删除用户失败:', error);
+            });
+        } else {
+            // 用户点击了取消，不执行任何操作
+        }
+    });
+});
+// {#获取用户信息#}
+document.addEventListener('DOMContentLoaded', function () {
+    const getUserNavItem = document.getElementById('getUser');
+    const profilePage = document.getElementById('profile');
+    const userIdSpan = document.getElementById('userId');
+    const usernameSpan = document.getElementById('username');
+    const nicknameSpan = document.getElementById('nickname');
+    const emailSpan = document.getElementById('email');
+    const statusSpan = document.getElementById('status');
+    getUserNavItem.addEventListener('click', function () {
+        fetch('/getuser/') // 发送到后端的路由
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('网络请求失败');
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.msg === 'success') {
+                    // 成功获取用户信息，将数据渲染到页面上
+                    user['userId'] = data.data.userid;
+                    user['username'] = data.data.username;
+                    user['nickname'] = data.data.nickname;
+                    user['email'] = data.data.email;
+                    user['status'] = data.data.status;
+                    if (user.email === null){
+                        user.email = '无';
+                    }
+                    console.log(user.email)
+                    userIdSpan.textContent = user.userId
+                    usernameSpan.textContent = user.username;
+                    nicknameSpan.textContent = user.nickname;
+                    emailSpan.textContent = user.email;
+                    statusSpan.textContent = user.status;
+
+
+                    // 显示用户资料页面
+                    profilePage.style.display = 'block';
+                } else {
+                    throw new Error(data.msg);
+                }
+            })
+            .catch(error => {
+                console.error('获取用户信息失败:', error);
+            });
+    });
+});
+// {#导航切换#}
+document.addEventListener('DOMContentLoaded', function () {
+    const sidebarItems = document.querySelectorAll('.sidebar li');
+    const pages = document.querySelectorAll('.page');
+
+    sidebarItems.forEach(function (item, index) {
+        item.addEventListener('click', function () {
+            // 高亮当前选中的导航项
+            sidebarItems.forEach(function (item) {
+                item.classList.remove('active');
+            });
+            item.classList.add('active');
+
+            // 隐藏所有页面
+            pages.forEach(function (page) {
+                page.style.display = 'none';
+            });
+
+            // 显示对应的页面
+            pages[index].style.display = 'block';
+        });
+    });
+});

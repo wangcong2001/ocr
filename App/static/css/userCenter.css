@@ -1,0 +1,372 @@
+/* 全局样式 */
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f4f4f4;
+}
+
+.user-center-container {
+    display: flex;
+    flex-direction: row;
+    height: 100vh;
+}
+
+/* 左侧导航栏样式 */
+.sidebar {
+    width: 200px;
+    background-color: #fff; /* 白色背景 */
+    color: #fff;
+}
+
+.sidebar ul {
+    list-style-type: none;
+    padding: 0;
+}
+
+
+
+.sidebar li {
+    padding: 10px;
+    cursor: pointer;
+    display: block;
+    border-radius: 10px; /* 圆角边框 */
+    transition: background-color 0.2s, border-color 0.3s; /* 添加颜色过渡效果 */
+    border: 1px solid transparent; /* 初始时边框透明 */
+
+}
+
+.sidebar ul li a {
+    text-decoration: none;
+    color: #000000; /* 黑色文字颜色 */
+    padding-left: 10px; /* 左边距 */
+    display: block;
+    border-radius: 10px; /* 圆角边框 */
+    transition: background-color 0.3s, border-color 0.3s; /* 添加颜色过渡效果 */
+    border: 1px solid transparent; /* 初始时边框透明 */
+}
+
+.sidebar li:hover {
+    background-color: rgb(246,246,254);
+}
+
+/* 导航链接选中时的样式 */
+.sidebar ul li.active {
+    background-color: rgb(246,246,254); /* 淡灰色背景 */
+    border-color: #968f8f; /* 黑色边框 */
+}
+
+/* 右侧内容区域样式 */
+.content {
+    flex: 1;
+    padding: 20px;
+}
+.page {
+    background-color: #f4f4f4; /* 浅灰色背景 */
+    display: none;
+}
+.contentpro{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+.page_1 {
+    /*display: flex;*/
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    /*text-align: center;*/
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    width: 20%; /* 或者使用 width: fit-content; */
+    max-width: 100%; /* 设置一个最大宽度以避免内容过宽 */
+    /*margin-left: 35%;*/
+    margin-top: 10%;
+}
+.page_2 {
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    width: 25%; /* 或者使用 width: fit-content; */
+    max-width: 100%; /* 设置一个最大宽度以避免内容过宽 */
+    /*margin-left: 35%;*/
+    margin-top: 10%;
+}
+.page_3 {
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    width: 25%; /* 或者使用 width: fit-content; */
+    max-width: 100%; /* 设置一个最大宽度以避免内容过宽 */
+    /*margin-left: 35%;*/
+    margin-top: 10%;
+}
+.page_4 {
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    height: 92vh;
+    max-height: 100%;
+    max-width: 100%; /* 设置一个最大宽度以避免内容过宽 */
+}
+
+
+.page.active {
+    display: block;
+}
+
+.profile-info {
+    margin-bottom: 20px;
+    margin-left: 15%;
+}
+.page_1 button {
+    margin-right: 10px;
+    margin-left: 35%;
+}
+
+button {
+    margin-right: 10px;
+}
+
+
+h2 {
+    text-align: center;
+    margin-top: 0;
+    font-size: 24px;
+    color: #333;
+}
+
+.profile-info p {
+    margin: 5px 0;
+}
+
+button {
+    margin-right: 10px;
+    padding: 10px 20px;
+    background-color: #007bff;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+button:hover {
+    background-color: #0056b3;
+}
+
+
+.passwordContainer {
+    background-color: rgb(244,244,244);
+    border-radius: 8px;
+    box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+}
+
+
+
+.formGroup {
+    margin-bottom: 20px;
+}
+
+#changeProfile label {
+    display: block;
+    margin-bottom: 5px;
+}
+#changePassword label {
+    display: block;
+    margin-bottom: 5px;
+}
+
+#changeProfile input[type="text"],
+#changeProfile input[type="email"],
+#changePassword input[type="password"] {
+    width: 95%;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 16px;
+}
+
+#verificationCode {
+    width: calc(100% - 130px); /* 考虑到发送验证码按钮的宽度，给输入框留出足够的空间 */
+}
+
+#sendCodeBtn {
+    width: 100px;
+    padding: 10px;
+    border: none;
+    border-radius: 5px;
+    background-color: #007bff;
+    color: #fff;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+#sendCodeBtn:hover {
+    background-color: #0056b3;
+}
+
+#changeProfile button[type="submit"] {
+    width: 100%;
+    padding: 10px;
+    border: none;
+    border-radius: 5px;
+    background-color: #007bff;
+    color: #fff;
+    font-size: 16px;
+    cursor: pointer;
+}
+#changePassword button[type="submit"] {
+    width: 100%;
+    padding: 10px;
+    border: none;
+    border-radius: 5px;
+    background-color: #007bff;
+    color: #fff;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+button[type="submit"]:hover {
+    background-color: #0056b3;
+}
+
+.error-msg {
+    color: red;
+    text-align: center;
+}
+
+#verificationCodeSentMessage {
+    background-color: #f0f0f0;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    padding: 10px;
+    margin-bottom: 20px;
+}
+
+
+
+.btnDisabled {
+    cursor: not-allowed;
+    opacity: 0.5; /* 或者其他您觉得合适的变灰样式 */
+}
+
+
+.imgcontent {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+}
+
+.thumbnails {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.thumbnail {
+    width: 150px;
+    height: 150px;
+    background-color: #f0f0f0;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 14px;
+}
+
+.pagination {
+    margin-top: 20px;
+    display: flex;
+    justify-content: center; /* 水平居中 */
+    align-items: center; /* 垂直居中 */
+}
+
+.pagination button {
+    margin: 0 5px;
+    padding: 5px 10px;
+    border: 1px solid #ccc;
+    border-radius: 3px;
+    background-color: #fff;
+    color: black;
+    cursor: pointer;
+}
+
+.pagination button.active {
+    background-color: #007bff;
+    color: #fff;
+}
+
+.popup {
+    position: fixed; /* 使用固定定位，让悬浮窗固定在页面上方 */
+    top: 50%; /* 将悬浮窗垂直居中 */
+    left: 50%; /* 将悬浮窗水平居中 */
+    transform: translate(-50%, -50%); /* 通过transform属性将悬浮窗居中 */
+    background-color: #fff; /* 设置悬浮窗的背景颜色 */
+    padding: 20px; /* 设置内边距 */
+    border-radius: 8px; /* 设置圆角 */
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); /* 添加阴影效果 */
+    z-index: 9999; /* 确保悬浮窗在其他内容之上 */
+}
+
+/* CSS样式 */
+/* CSS样式 */
+.popup {
+    /* 设置悬浮窗样式，例如位置、大小、边框等 */
+    /* 这里只是示例，请根据实际需求进行调整 */
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: white;
+    width: 50vw;
+    height: 70vh;
+    padding: 20px;
+    border: 1px solid #ccc;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.content-container {
+    /* 使用Flexbox布局，实现左右布局 */
+    display: flex;
+    align-items: center;
+    height: 90%;
+
+}
+
+.img-container {
+    flex-grow: 1; /* 图片容器占据剩余空间的一半 */
+    max-width: 50%; /* 图片容器最大宽度为50% */
+    width: 50%; /* 图片容器最大宽度为50% */
+    height: 100%;
+    margin-right: 20px; /* 设置图片容器与文字容器的间距 */
+
+}
+
+.img-container img {
+    /*width: 100%;*/
+    height: 100%;
+    object-fit: contain;
+}
+
+.text-container {
+    /* 右侧文字容器样式 */
+    /* 设置文字容器占据一半空间 */
+    flex-grow: 1; /* 文字容器占据剩余空间的一半 */
+    max-width: 50%; /* 文字容器最大宽度为50% */
+    height: 100%;
+    overflow: auto;
+    white-space: pre-line;
+
+}
+
+.text-container p {
+
+}

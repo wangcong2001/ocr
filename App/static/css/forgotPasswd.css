@@ -1,0 +1,109 @@
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f4f4;
+    margin: 0;
+    padding: 0;
+}
+
+.passwordContainer {
+    max-width: 400px;
+    margin: 50px auto;
+    padding: 30px;
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+}
+
+.container {
+    margin-bottom: 20px;
+}
+
+h2 {
+    text-align: center;
+}
+
+.formGroup {
+    margin-bottom: 20px;
+}
+
+label {
+    display: block;
+    margin-bottom: 5px;
+}
+
+input[type="text"],
+input[type="email"],
+input[type="password"] {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 16px;
+}
+
+#verificationCode {
+    width: calc(100% - 130px); /* 考虑到发送验证码按钮的宽度，给输入框留出足够的空间 */
+}
+
+#sendCodeBtn {
+    width: 100px;
+    padding: 10px;
+    border: none;
+    border-radius: 5px;
+    background-color: #007bff;
+    color: #fff;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+#sendCodeBtn:hover {
+    background-color: #0056b3;
+}
+
+button[type="submit"] {
+    width: 100%;
+    padding: 10px;
+    border: none;
+    border-radius: 5px;
+    background-color: #007bff;
+    color: #fff;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+button[type="submit"]:hover {
+    background-color: #0056b3;
+}
+
+.error-msg {
+    color: red;
+    text-align: center;
+}
+
+#verificationCodeSentMessage {
+    background-color: #f0f0f0;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    padding: 10px;
+    margin-bottom: 20px;
+}
+
+.returnHome {
+    text-align: center;
+    margin-top: 20px;
+}
+
+.returnHome a {
+    text-decoration: none;
+    color: #000000;
+    font-size: 16px;
+}
+
+.returnHome a:hover {
+    text-decoration: underline;
+}
+
+.btnDisabled {
+    cursor: not-allowed;
+    opacity: 0.5; /* 或者其他您觉得合适的变灰样式 */
+}

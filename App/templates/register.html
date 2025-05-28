@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/register.css') }}">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <script src="{{ url_for('static', filename='js/register.js') }}"></script>
+    <link rel="icon" href="{{ url_for('static', filename='img/favicon.ico') }}">
+
+
+
+    <title>注册</title>
+</head>
+<body>
+    <div class="register">
+        <h2>用户注册</h2>
+        <form id="registerForm" method="post" action="/register/">
+            <div class="inputGroup">
+                <label for="username">用户名</label>
+                <input type="text" id="username" name="username" required>
+            </div>
+            <div class="inputGroup">
+                <label for="password">密码</label>
+                <input type="password" id="password" name="password" required>
+            </div>
+            <div class="inputGroup">
+                <label for="confirmPassword">确认密码</label>
+                <input type="password" id="confirmPassword" name="confirmPassword" required>
+            </div>
+            <button type="submit">注册</button>
+            <span class="login"><a href="/login/">登录</a></span>
+
+            <p id="errorMsg" class="errorMsg"></p>
+        </form>
+        <div class="returnHome">
+        <a href="/">返回首页</a>
+    </div>
+    </div>
+</body>
+</html>

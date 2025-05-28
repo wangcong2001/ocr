@@ -1,0 +1,49 @@
+    body{
+        border: none;
+    }
+    .index{
+        display: flex;
+        border: none;
+    }
+    .aside{
+        background: rgb(245,245,245);
+        height: 98vh;
+        width: 15vw;
+        border: none;
+        text-align: center;
+    }
+    .aside_app_download{
+        height: 40vh;
+    }
+    .aside_logo{
+        height: 30vh;
+        text-align: center;
+    }
+    .aside_user{
+        height: 20vh;
+    }
+    .main{
+        height: 98vh;
+        width: 85vw;
+        border: none;
+    }
+    .main_upload{
+        height: 90vh;
+    }
+    .upload_file
+    {
+        height: 10vh;
+    }
+    .file_display{
+        height: 80vh;
+        display: flex;
+        flex-flow: row wrap;
+    }
+    .file_elem{
+        margin: 16px;
+        width: 4vw;
+        height: 9vh;
+    }
+    .main_sub{
+        height: 4vh;
+    }

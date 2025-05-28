@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+<head>
+    <meta charset="UTF-8">
+    <title>图片文字识别系统</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/home.css') }}">
+    <script src="{{ url_for('static', filename='js/home.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/pdf.min.js') }}"></script>
+    <link rel="icon" href="{{ url_for('static', filename='img/favicon.ico') }}">
+{#    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.10.377/pdf.min.js"></script>#}
+
+
+</head>
+<body>
+    <div class="navbar">
+        <div class="logo">
+            <img src="../static/img/favicon.ico" alt="logo" >
+            <div>图片文字识别系统</div>
+        </div>
+        <div class="user">
+            <div class="link">
+
+                {% if userid %}
+                    <a href="/center/">用户中心</a>
+                    <span>|</span>
+                    <a href="/logout/">退出</a>
+                {% else %}
+                    <a href="/login/">登录</a>
+                    <span>|</span>
+                    <a href="/register/">注册</a>
+                {% endif %}
+                <span>|</span>
+                <a href="/feedback/">意见反馈</a>
+            </div>
+
+
+
+        </div>
+    </div>
+    <div class="main">
+        <div class="ocr">
+            <div id="loadingSpinner" style="display: none;">
+                <div id="spinner"></div>
+            </div>
+            <div id="loadingSpinnerpdf" style="display: none;">
+                <div id="spinner"></div>
+            </div>
+
+            <div class="ImgView">
+                <div class="ImgShow" id="imgView" >
+                    <div class="ImgBox" id="selectedImg" draggable="true">
+
+                    </div>
+                </div>
+                <div class="ImgLine"></div>
+                <div class="ImgText">
+                    <div class="ImgTxt"></div>
+                </div>
+            </div>
+            <br>
+            <div class="ImgList">
+            </div>
+            <div class="operator">
+{#                <div class="AddImg" id="uploadBtn">+添加图像</div>#}
+                <div class="AddImgMul" id="uploadBtnmul">添加图像</div>
+                <div class="AddImgMul" id="uploadBtnpdf">添加PDF</div>
+                <div class="SubmitImg" id="recognizeBtn">识别</div>
+                <div class="SubmitImgs" id="recognizeAllBtn">批量识别</div>
+                <div class="ExportImg">导出文本</div>
+            </div>
+        </div>
+    </div>
+
+
+</body>
+
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const addPdfBtn = document.getElementById('uploadBtnpdf');
+    const fileInput = document.createElement('input');
+    const loadingSpinner = document.getElementById('loadingSpinnerpdf');
+
+    fileInput.type = 'file';
+    fileInput.accept = '.pdf'; // 只允许选择 PDF 文件
+    fileInput.style.display = 'none';
+
+    addPdfBtn.addEventListener('click', function () {
+        fileInput.click();
+    });
+    fileInput.addEventListener('change', function () {
+        const pdfFile = fileInput.files[0]; // 获取用户选择的 PDF 文件
+        // console.log(pdfFile)
+        const loadingTask = pdfjsLib.getDocument(URL.createObjectURL(pdfFile));
+        // console.log(loadingTask)
+        // 定义一个用于存储文件的数组
+        let pdfFiles = [];
+        loadingTask.promise.then(function(pdf) {
+            loadingSpinner.style.display = 'block';
+            // 循环处理 PDF 的每一页
+            for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+                // 获取当前页对象
+                pdf.getPage(pageNum).then(function(page) {
+                    // 创建一个 Canvas 元素来渲染 PDF 页面
+                    const canvas = document.createElement('canvas');
+                    const context = canvas.getContext('2d');
+                    const viewport = page.getViewport({ scale: 1.0 });
+
+                    // 设置 Canvas 尺寸
+                    canvas.width = viewport.width;
+                    canvas.height = viewport.height;
+
+                    // 渲染 PDF 页面到 Canvas 上
+                    const renderTask = page.render({ canvasContext: context, viewport: viewport });
+                    renderTask.promise.then(function() {
+                        // 将 Canvas 转换为 Blob 对象
+                        canvas.toBlob(function(blob) {
+                            // 创建一个新的 File 对象并指定文件名
+                            const fileName = `page_${pageNum}.png`;
+                            const file = new File([blob], fileName);
+
+                            // 将文件添加到数组中
+                            pdfFiles.push(file);
+                            // 如果已经处理完最后一页，则将文件数组赋值给 pdfimg 变量
+                            if (pageNum === pdf.numPages) {
+                                pdfimg = pdfFiles;
+                                alert("上传成功")
+                                loadingSpinner.style.display = 'none';
+
+                                // console.log('PDF 转换完成，文件数组:', pdfFiles);
+                                // console.log(pdfFiles)
+                                const formData = new FormData();
+                                for (let i = 0; i < pdfFiles.length; i++) {
+                                    const encodedFileName = encodeURIComponent(pdfFiles[i].name);
+                                    formData.append('files[]', pdfFiles[i], encodedFileName);
+                                    // console.log(pdfFiles[i].name, encodedFileName)
+                                }
+                                // 发送文件到后端
+                                fetch('/uploadmul/', {
+                                    method: 'POST',
+                                    body: formData
+                                })
+                                .then(response => {
+                                    if (!response.ok) {
+                                        throw new Error('网络链接失败');
+                                    }
+                                    return response.json();
+                                })
+                                .then(data => {
+                                    // console.log(data)
+                                    if (Array.isArray(data)) { // 假设后端返回的是一个包含每个图片上传结果的数据数组
+                                        data.forEach(item => {
+                                            // console.log(item)
+                                            if (item.msg === 'success') {
+                                                // 处理每个上传成功的图片数据
+                                                let imageData = {
+                                                    msg: item.msg,
+                                                    id: item.data.id,
+                                                    image_path: item.data.image_path.replace(/\\/g, '/'),
+                                                    img_text: item.data.img_text
+                                                };
+                                                img_data_list.push(imageData)
+                                                // console.log(1,imageData)
+                                                // 创建 ImgItem 和 img 元素并添加到页面中
+                                                const ImgItem = document.createElement('div');
+                                                ImgItem.classList.add('ImgItem');
+                                                const img = document.createElement('img');
+                                                img.classList.add('imgsize');
+                                                img.src = imageData.image_path;
+                                                ImgItem.appendChild(img);
+                                                const ImgList = document.querySelector('.ImgList');
+                                                ImgList.appendChild(ImgItem);
+                                                // 添加点击事件监听器
+                                                ImgItem.addEventListener('click', function () {
+                                                    let imgSrc = img.getAttribute('src');
+                                                    imgSrc = imgSrc.replace(/\\/g, '/');
+                                                    const imgBox = document.getElementById('selectedImg');
+                                                    imgBox.style.backgroundImage = `url(${imgSrc})`;
+                                                    const imageData = img_data_list.find(data => data.image_path === imgSrc);
+                                                    // console.log(imageData)
+                                                    const imgTxtDiv = document.querySelector('.ImgTxt');
+                                                    imgTxtDiv.textContent = imageData.img_text;
+                                                    // console.log(imgTxtDiv.textContent)
+
+
+                                                });
+                                                ImgItem.click()
+                                            } else {
+                                                console.error(`图片 ${item.file_name} 上传失败: ${item.error}`);
+                                            }
+                                        });
+                                    } else {
+                                        console.error('无法处理服务器返回的数据格式');
+                                    }
+                                })
+                                .catch(error => {
+                                    console.error('文件上传失败:', error);
+                                });
+
+                            }
+                        }, 'image/png');
+                    });
+                });
+            }
+        }, function(error) {
+            console.error('加载 PDF 文件失败:', error);
+        });
+
+    });
+
+});
+
+
+function exportToTxt() {
+    let content = '';
+    img_data_list.forEach(item => {
+        content += `${item.img_text}\n\n
+        -------------------------------------
+        \n\n`; // 在每条文本之间插入换行符以区分
+    });
+    // 创建Blob对象
+    let blob = new Blob([content], {type: "text/plain;charset=utf-8"});
+
+    // 生成下载链接
+    let url = URL.createObjectURL(blob);
+
+    // 创建隐藏的可下载链接
+    let a = document.createElement("a");
+    a.href = url;
+    a.download = "exported_text.txt"; // 自定义文件名
+    a.style.display = "none";
+    document.body.appendChild(a);
+
+    // 触发点击事件下载文件
+    a.click();
+
+    // 清理
+    setTimeout(() => {
+        URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+    }, 0);
+}
+
+// 绑定导出按钮的点击事件
+document.querySelector('.ExportImg').addEventListener('click', exportToTxt);
+
+const imgBox = document.getElementById('selectedImg');
+const imgView = document.getElementById('imgView');
+// 初始缩放比例为1
+let scale = 1;
+
+// 鼠标滚轮放大缩小
+imgView.addEventListener('wheel', function (e) {
+    e.preventDefault();
+    if (e.deltaY < 0) {
+        scale += 0.1; // 滚轮向上放大
+    } else {
+        scale -= 0.1; // 滚轮向下缩小
+    }
+
+    // 设置最小和最大缩放比例，避免过小或过大
+    scale = Math.max(0.1, Math.min(3, scale));
+    imgBox.style.transform = `scale(${scale})`;
+});
+const dragElement = document.getElementById("selectedImg");
+// 拖拽功能
+dragElement.addEventListener("mousedown", startDrag);
+function startDrag(event) {
+    event.preventDefault();
+    const currentHandle = event.target;
+    const isResizeHandle = currentHandle.className.includes("resize-handle");
+    if (isResizeHandle) return;
+    const startX = event.clientX;
+    const startY = event.clientY;
+    const startLeft = dragElement.offsetLeft;
+    const startTop = dragElement.offsetTop;
+    document.addEventListener("mousemove", drag);
+    document.addEventListener("mouseup", stopDrag);
+    function drag(event) {
+        const dx = event.clientX - startX;
+        const dy = event.clientY - startY;
+        const newLeft = startLeft + dx;
+        const newTop = startTop + dy;
+        dragElement.style.left = newLeft + "px";
+        dragElement.style.top = newTop + "px";
+    }
+    function stopDrag() {
+        document.removeEventListener("mousemove", drag);
+        document.removeEventListener("mouseup", stopDrag);
+    }
+}
+</script>
+
+</html>
